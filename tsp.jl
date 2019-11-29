@@ -1,10 +1,11 @@
 using JuMP
-using GLPK
+using Cbc
 using Distances
+using PyPlot
 
 function main()
     # Reading data to simulate the TSP
-    salesman_file = open("burma14.tsp");
+    salesman_file = open("pr76.tsp");
 
     N = 0
     i = 1
@@ -12,7 +13,6 @@ function main()
 
     while !eof(salesman_file)
     	line = readline(salesman_file)
-    	println(line)
 
         info = split(line, ": ")
 
@@ -29,8 +29,6 @@ function main()
 
         		ignore, x, y = split(line)
         		cities[j] = [parse(Float64, x), parse(Float64, y)]
-
-        		println(cities[j])
         	end
         end
 
@@ -38,36 +36,69 @@ function main()
     end
     close(salesman_file)
 
-	# TS definition using GLPK
-	caixeiro = Model(with_optimizer(GLPK.Optimizer))
+
+
+	# TS definition using Cbc
+	salesman = Model(with_optimizer(Cbc.Optimizer))
 	
 	# Variables
-	@variable(caixeiro, x[1:N,1:N], Bin)
-	@variable(caixeiro, u[1:N])
+	@variable(salesman, x[1:N,1:N], Bin)
+	@variable(salesman, u[1:N])
 
 	# Objective funcion
-	@objective(caixeiro, Min, sum(euclidean(cities[i], cities[j]) * x[i, j]
+	@objective(salesman, Min, sum(euclidean(cities[i], cities[j]) * x[i, j]
 	    for i in 1:N, j in 1:N if i != j))
 	
 	# Restrictions to ensure each vertex's exit
 	for i in 1:N
-	    @constraint(caixeiro, x[i, i] == 0)
-	    @constraint(caixeiro, sum(x[i,j] for j in 1 : N if i != j ) == 1)
+	    @constraint(salesman, x[i, i] == 0)
+	    @constraint(salesman, sum(x[i,j] for j in 1 : N if i != j ) == 1)
 	end
 	# Restrictions to ensure each vertex's arrival
 	for j in 1:N
-	    @constraint(caixeiro, sum(x[i,j] for i in 1:N if i != j) == 1)
+	    @constraint(salesman, sum(x[i,j] for i in 1:N if i != j) == 1)
 	end
 	# Using MTZ formulation to create restrictions that avoids invalid subroutes
 	for i in 2:N, j in 2:N
-	    @constraint(caixeiro, u[i] - u[j] + (N * x[i, j]) <= N - 1)
+	    @constraint(salesman, u[i] - u[j] + (N * x[i, j]) <= N - 1)
 	end
 	for i in 2:N
-		@constraint(caixeiro, u[i] >= 1)
-		@constraint(caixeiro, u[i] <= N)
+		@constraint(salesman, u[i] >= 1)
+		@constraint(salesman, u[i] <= N)
 	end
 	
-	print(caixeiro)
+	results = optimize!(salesman)
+
+
+	# objvalue = JuMP.objective_value(salesman)
+	# bound = getobjbound(salesman)
+
+	# println("Best inferior boundary: $bound")
+	# gap = 100 * (objvalue - bound) / objvalue
+
+	edgeOrigin = []
+	edgeDestiny = []
+
+	# #Getting values of x[i,j] to show a solved graph
+	# for i in 1:N
+	# 	for j in 1:N
+	# 		println("Iteracao $i $j")
+	# 		if i != j && getvalue(salesman, x[i][j]) > 0.99
+	# 			append!(edgeOrigin, cities[i])
+	# 			append!(edgeDestiny, cities[j])
+	# 		end
+	# 	end
+	# end
+
+    # Plotting
+    clf()
+    # plot(edgeOrigin, edgeDestiny, marker = "o", markersize = 6, markercolor = "orange")
+    plot(cities, linestyle = "none", marker = "o", markersize = 6, color = "orange")
+    xlabel("X")
+    ylabel("Y")
+    title("Travelling salesman")
+    grid("on")
+    show()
 
 end
 
