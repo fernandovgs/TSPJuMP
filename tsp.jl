@@ -5,16 +5,24 @@ using PyPlot
 
 function main()
     # Reading data to simulate the TSP
-    salesman_file = open("pr76.tsp");
+    salesman_file = open("ulysses16.tsp");
 
     N = 0
     i = 1
 	cities = nothing
 
     while !eof(salesman_file)
-    	line = readline(salesman_file)
+		line = readline(salesman_file)
+        info = ""
+		println(sizeof(line))
 
-        info = split(line, ": ")
+		if sizeof(line) != 4
+			if line[1:5] == "NAME:"
+				info = split(line, ": ")
+			else
+				info = split(line, " : ")
+			end
+		end
 
         # Gets the number of cities
         if (info[1] == "DIMENSION")
@@ -36,8 +44,6 @@ function main()
     end
     close(salesman_file)
 
-
-
 	# TS definition using Cbc
 	salesman = Model(with_optimizer(Cbc.Optimizer))
 	
@@ -45,7 +51,7 @@ function main()
 	@variable(salesman, x[1:N,1:N], Bin)
 	@variable(salesman, u[1:N])
 
-	# Objective funcion
+	# Objective function
 	@objective(salesman, Min, sum(euclidean(cities[i], cities[j]) * x[i, j]
 	    for i in 1:N, j in 1:N if i != j))
 	
@@ -54,6 +60,7 @@ function main()
 	    @constraint(salesman, x[i, i] == 0)
 	    @constraint(salesman, sum(x[i,j] for j in 1 : N if i != j ) == 1)
 	end
+
 	# Restrictions to ensure each vertex's arrival
 	for j in 1:N
 	    @constraint(salesman, sum(x[i,j] for i in 1:N if i != j) == 1)
@@ -66,34 +73,48 @@ function main()
 		@constraint(salesman, u[i] >= 1)
 		@constraint(salesman, u[i] <= N)
 	end
-	
+	print("optimizing")
 	results = optimize!(salesman)
 
+	#Getting values of x[i,j] to show a solved graph
+	edgeOrigin = [Vector{Float64}(undef, 2) for _ in 1:N]
+	edgeDestiny = [Vector{Float64}(undef, 2) for _ in 1:N]
+	j = 1
+	k = 1
+	for i in 1:(N*N)
+		if j != k && getvalue(x[i]) > 0.99
+			edgeOrigin[j] = cities[j]
+			edgeDestiny[j] = cities[k]
+			# append!(edgeOrigin, cities[j])
+			# append!(edgeDestiny, cities[k])
+		end
 
-	# objvalue = JuMP.objective_value(salesman)
-	# bound = getobjbound(salesman)
+		if k == N
+			k = 1
+			j += 1
+		else
+			k += 1
+		end
+	end
 
-	# println("Best inferior boundary: $bound")
-	# gap = 100 * (objvalue - bound) / objvalue
+	edgesX = 0
+	edgesY = 0
 
-	edgeOrigin = []
-	edgeDestiny = []
-
-	# #Getting values of x[i,j] to show a solved graph
-	# for i in 1:N
-	# 	for j in 1:N
-	# 		println("Iteracao $i $j")
-	# 		if i != j && getvalue(salesman, x[i][j]) > 0.99
-	# 			append!(edgeOrigin, cities[i])
-	# 			append!(edgeDestiny, cities[j])
-	# 		end
-	# 	end
-	# end
 
     # Plotting
-    clf()
-    # plot(edgeOrigin, edgeDestiny, marker = "o", markersize = 6, markercolor = "orange")
-    plot(cities, linestyle = "none", marker = "o", markersize = 6, color = "orange")
+	clf()
+	# points
+	for i in 1:N
+		plot(cities[i][1], cities[i][2], linestyle = "none", marker = "o", markersize = 6, color = "orange")
+	end
+
+	# Lines
+	for i in 1:N
+		edgesX = [edgeOrigin[i][1], edgeDestiny[i][1]]
+		edgesY = [edgeOrigin[i][2], edgeDestiny[i][2]]
+
+		plot(edgesX, edgesY, color = "blue")
+	end
     xlabel("X")
     ylabel("Y")
     title("Travelling salesman")
@@ -103,5 +124,3 @@ function main()
 end
 
 main()
-
-
