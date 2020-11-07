@@ -1,7 +1,0 @@
-Objective value:                73.98761805
-Enumerated nodes:               25328
-Total iterations:               453069
-Time (CPU seconds):             22.44
-Time (Wallclock seconds):       22.79
-
-Total time (CPU seconds):       22.44   (Wallclock seconds):       22.79

@@ -5,15 +5,24 @@ using PyPlot
 
 function main()
     # Reading data to simulate the TSP
-    salesman_file = open("toyexample.tsp");
+    salesman_file = open("ulysses16.tsp");
 
     N = 0
     i = 1
 	cities = nothing
 
     while !eof(salesman_file)
-    	line = readline(salesman_file)
-        info = split(line, " : ")
+		line = readline(salesman_file)
+        info = ""
+		println(sizeof(line))
+
+		if sizeof(line) != 4
+			if line[1:5] == "NAME:"
+				info = split(line, ": ")
+			else
+				info = split(line, " : ")
+			end
+		end
 
         # Gets the number of cities
         if (info[1] == "DIMENSION")
@@ -80,16 +89,13 @@ function main()
 			# append!(edgeDestiny, cities[k])
 		end
 
-		if k == 5
+		if k == N
 			k = 1
 			j += 1
 		else
 			k += 1
 		end
 	end
-
-	println(edgeOrigin)
-	println(edgeDestiny)
 
 	edgesX = 0
 	edgesY = 0
