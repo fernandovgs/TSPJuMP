@@ -4,14 +4,39 @@ using Distances
 using PyPlot
 
 function main()
+<<<<<<< HEAD
     # Reading data to simulate the TSP
     salesman_file = open("test-cases/toyproblem.tsp");
+=======
+	# Reading data to simulate the TSP
+	if size(ARGS, 1) < 1
+		println("Insert a test case file. Example: julia tsp.jl toyexample.tsp")
+		return 0
+	end
 
-    N = 0
-    i = 1
+	fp = "test-cases/" * ARGS[1]
+
+	if !isfile(fp)
+		println("Insert a valid test case file. Current test cases available:")
+		println("\t>> toyexample.tsp <<")
+		println("\t>> dj38.tsp <<")
+		println("\t>> qa194.tsp <<")
+		println("\t>> uy734.tsp <<")
+		return 0
+	end
+>>>>>>> improved entries
+
+	salesman_file = open(fp);
+
+	N = 0
+	i = 1
 	cities = nothing
 
+<<<<<<< HEAD
     while !eof(salesman_file)  
+=======
+	while !eof(salesman_file)  
+>>>>>>> improved entries
 		line = readline(salesman_file)
         info = ""
 
@@ -22,6 +47,7 @@ function main()
 				else
 					info = split(line, " : ")
 				end
+<<<<<<< HEAD
 			end
 	
 			# Gets the number of cities
@@ -45,9 +71,35 @@ function main()
 		
     end
     close(salesman_file)
+=======
+			end
+	
+			# Gets the number of cities
+			if (info[1] == "DIMENSION")
+				N = parse(Int, info[2])
+				cities = [Vector{Float64}(undef, 2) for _ in 1:N]
+			end
+	
+			# Gets the euclidian dots representing a city's position
+			if (info[1] == "NODE_COORD_SECTION")
+				for j = 1:N
+					line = readline(salesman_file)
+	
+					ignore, x, y = split(line)
+					cities[j] = [parse(Float64, x), parse(Float64, y)]
+				end
+			end
+	
+			i += 1
+		end
+		
+	end
+	close(salesman_file)
+>>>>>>> improved entries
 
 	# TS definition using Cbc
 	salesman = Model(with_optimizer(Cbc.Optimizer))
+	set_optimizer_attribute(salesman, "seconds", 600.0)
 	
 	# Variables
 	@variable(salesman, x[1:N,1:N], Bin)

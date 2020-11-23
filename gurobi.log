@@ -1,0 +1,20 @@
+
+Gurobi 9.1.0 (linux64, gurobi_cl) logging started Thu Nov 26 19:23:56 2020
+
+Using license file /opt/gurobi910/gurobi.lic
+Set parameter LogFile to value gurobi.log
+
+Gurobi 9.1.0 (linux64, Python) logging started Thu Nov 26 19:24:42 2020
+
+Using license file /opt/gurobi910/gurobi.lic
+Set parameter LogFile to value gurobi.log
+
+Gurobi 9.1.0 (linux64, Python) logging started Thu Nov 26 19:28:22 2020
+
+Using license file /home/fernando/dev/licenses/gurobi.lic
+Set parameter LogFile to value gurobi.log
+
+Gurobi 9.1.0 (linux64, Python) logging started Thu Nov 26 19:36:24 2020
+
+Using license file /home/fernando/dev/licenses/gurobi.lic
+Set parameter LogFile to value gurobi.log
