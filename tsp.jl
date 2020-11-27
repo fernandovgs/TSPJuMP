@@ -29,15 +29,22 @@ function main()
 	cities = nothing
 
 	while !eof(salesman_file)  
-	line = readline(salesman_file)
-			info = ""
+		line = readline(salesman_file)
+        info = ""
 
-	if line != "EOF"
-		if sizeof(line) >= 4
-			if line[1:5] == "NAME:"
-				info = split(line, ": ")
-			else
-				info = split(line, " : ")
+		if line != "EOF"
+			if sizeof(line) >= 4
+				if line[1:5] == "NAME:"
+					info = split(line, ": ")
+				else
+					info = split(line, " : ")
+				end
+			end
+	
+			# Gets the number of cities
+			if (info[1] == "DIMENSION")
+				N = parse(Int, info[2])
+				cities = [Vector{Float64}(undef, 2) for _ in 1:N]
 			end
 		end
 
@@ -121,7 +128,7 @@ function main()
 	edgesY = 0
 
 
-    # Plotting
+	# Plotting
 	clf()
 	# points
 	for i in 1:N
