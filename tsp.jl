@@ -1,5 +1,6 @@
 using JuMP
-using Cbc
+# using Cbc
+using Gurobi
 using Distances
 using PyPlot
 
@@ -97,9 +98,8 @@ function main()
 	close(salesman_file)
 >>>>>>> improved entries
 
-	# TS definition using Cbc
-	salesman = Model(with_optimizer(Cbc.Optimizer))
-	set_optimizer_attribute(salesman, "seconds", 600.0)
+	# TS definition using Gurobi
+	salesman = Model(Gurobi.Optimizer)
 	
 	# Variables
 	@variable(salesman, x[1:N,1:N], Bin)
@@ -127,7 +127,11 @@ function main()
 		@constraint(salesman, u[i] >= 1)
 		@constraint(salesman, u[i] <= N)
 	end
-	print("optimizing...")
+
+	set_optimizer_attribute(salesman, "TimeLimit", 600)
+	# set_optimizer_attribute(salesman, "threads", 4)
+
+	println("Optimizing...")
 	results = optimize!(salesman)
 
 	#Getting values of x[i,j] to show a solved graph
@@ -153,7 +157,7 @@ function main()
 	edgesY = 0
 
 
-    # Plotting
+	# Plotting
 	clf()
 	# points
 	for i in 1:N
