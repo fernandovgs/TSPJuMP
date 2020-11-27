@@ -30,8 +30,9 @@ function main()
 
 	while !eof(salesman_file)  
 		line = readline(salesman_file)
-        info = ""
-
+    info = ""
+		
+    println(line)
 		if line != "EOF"
 			if sizeof(line) >= 4
 				if line[1:5] == "NAME:"
@@ -45,28 +46,26 @@ function main()
 			if (info[1] == "DIMENSION")
 				N = parse(Int, info[2])
 				cities = [Vector{Float64}(undef, 2) for _ in 1:N]
-			end
-		end
-
-		# Gets the number of cities
+      end
+      
+      # Gets the number of cities
 		if (info[1] == "DIMENSION")
 			N = parse(Int, info[2])
 			cities = [Vector{Float64}(undef, 2) for _ in 1:N]
 		end
 
-		# Gets the euclidian dots representing a city's position
-		if (info[1] == "NODE_COORD_SECTION")
-			for j = 1:N
-				line = readline(salesman_file)
+      # Gets the euclidian dots representing a city's position
+      if (info[1] == "NODE_COORD_SECTION")
+        for j = 1:N
+          line = readline(salesman_file)
 
-				ignore, x, y = split(line)
-				cities[j] = [parse(Float64, x), parse(Float64, y)]
-			end
+          ignore, x, y = split(line)
+          cities[j] = [parse(Float64, x), parse(Float64, y)]
+        end
+      end
 		end
 
 		i += 1
-	end
-	
 	end
 	close(salesman_file)
 
