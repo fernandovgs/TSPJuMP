@@ -4,14 +4,31 @@ using Distances
 using PyPlot
 
 function main()
-    # Reading data to simulate the TSP
-    salesman_file = open("test-cases/toyproblem.tsp");
+	# Reading data to simulate the TSP
+	if size(ARGS, 1) < 1
+		println("Insert a test case file. Example: julia tsp.jl toyexample.tsp")
+		return 0
+	end
 
-    N = 0
-    i = 1
+	fp = "test-cases/" * ARGS[1]
+
+	if !isfile(fp)
+		println("Insert a valid test case file. Current test cases available:")
+		println("\t>> toyexample.tsp <<")
+		println("\t>> dj38.tsp <<")
+		println("\t>> qa194.tsp <<")
+		println("\t>> uy734.tsp <<")
+		println("\t>> wi29.tsp <<")
+		return 0
+	end
+
+	salesman_file = open(fp);
+
+	N = 0
+	i = 1
 	cities = nothing
 
-    while !eof(salesman_file)  
+	while !eof(salesman_file)  
 		line = readline(salesman_file)
         info = ""
 
@@ -43,11 +60,12 @@ function main()
 			i += 1
 		end
 		
-    end
-    close(salesman_file)
+	end
+	close(salesman_file)
 
 	# TS definition using Cbc
 	salesman = Model(with_optimizer(Cbc.Optimizer))
+	set_optimizer_attribute(salesman, "seconds", 600.0)
 	
 	# Variables
 	@variable(salesman, x[1:N,1:N], Bin)
@@ -101,7 +119,7 @@ function main()
 	edgesY = 0
 
 
-    # Plotting
+	# Plotting
 	clf()
 	# points
 	for i in 1:N
