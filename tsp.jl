@@ -5,42 +5,44 @@ using PyPlot
 
 function main()
     # Reading data to simulate the TSP
-    salesman_file = open("ulysses16.tsp");
+    salesman_file = open("test-cases/toyproblem.tsp");
 
     N = 0
     i = 1
 	cities = nothing
 
-    while !eof(salesman_file)
+    while !eof(salesman_file)  
 		line = readline(salesman_file)
         info = ""
-		println(sizeof(line))
 
-		if sizeof(line) != 4
-			if line[1:5] == "NAME:"
-				info = split(line, ": ")
-			else
-				info = split(line, " : ")
+		if line != "EOF"
+			if sizeof(line) >= 4
+				if line[1:5] == "NAME:"
+					info = split(line, ": ")
+				else
+					info = split(line, " : ")
+				end
 			end
+	
+			# Gets the number of cities
+			if (info[1] == "DIMENSION")
+				N = parse(Int, info[2])
+				cities = [Vector{Float64}(undef, 2) for _ in 1:N]
+			end
+	
+			# Gets the euclidian dots representing a city's position
+			if (info[1] == "NODE_COORD_SECTION")
+				for j = 1:N
+					line = readline(salesman_file)
+	
+					ignore, x, y = split(line)
+					cities[j] = [parse(Float64, x), parse(Float64, y)]
+				end
+			end
+	
+			i += 1
 		end
-
-        # Gets the number of cities
-        if (info[1] == "DIMENSION")
-        	N = parse(Int, info[2])
-        	cities = [Vector{Float64}(undef, 2) for _ in 1:N]
-        end
-
-        # Gets the euclidian dots representing a city's position
-        if (info[1] == "NODE_COORD_SECTION")
-        	for j = 1:N
-        		line = readline(salesman_file)
-
-        		ignore, x, y = split(line)
-        		cities[j] = [parse(Float64, x), parse(Float64, y)]
-        	end
-        end
-
-        i += 1
+		
     end
     close(salesman_file)
 
@@ -73,7 +75,7 @@ function main()
 		@constraint(salesman, u[i] >= 1)
 		@constraint(salesman, u[i] <= N)
 	end
-	print("optimizing")
+	print("optimizing...")
 	results = optimize!(salesman)
 
 	#Getting values of x[i,j] to show a solved graph
@@ -85,8 +87,6 @@ function main()
 		if j != k && getvalue(x[i]) > 0.99
 			edgeOrigin[j] = cities[j]
 			edgeDestiny[j] = cities[k]
-			# append!(edgeOrigin, cities[j])
-			# append!(edgeDestiny, cities[k])
 		end
 
 		if k == N
