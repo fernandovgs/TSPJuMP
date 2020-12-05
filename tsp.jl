@@ -3,7 +3,7 @@ using Gurobi
 using Distances
 using PyPlot
 
-function main()
+function openTSPFile()
 	# Reading data to simulate the TSP
 	if size(ARGS, 1) < 1
 		println("Insert a test case file. Example: julia tsp.jl toyexample.tsp")
@@ -22,7 +22,13 @@ function main()
 		return 0
 	end
 
-	salesman_file = open(fp);
+	return open(fp)
+end
+
+function main()
+	
+
+	salesman_file = openTSPFile();
 
 	N = 0
 	i = 1
@@ -32,7 +38,6 @@ function main()
 		line = readline(salesman_file)
     info = ""
 		
-    println(line)
 		if line != "EOF"
 			if sizeof(line) >= 4
 				if line[1:5] == "NAME:"
@@ -101,15 +106,57 @@ function main()
 		@constraint(salesman, u[i] <= N)
 	end
 
-	print("optimizing...")
+	# Heuristics to help the solver to find a solution
+	citiesIndex = fill(0, N)
+	citiesCircuit = [fill(0, N) for _ in 1:N]
+
+	for i in 1:N
+		citiesIndex[i] = i
+	end
+	
+	# Callback function used by Gurobi solver to use our constructed
+	# heuristic for an initial solution. Must be declared in the same scope. 
+	start = 1
+	
+	while size(citiesIndex, 1) > 0		
+		lowerDistance = 999999999.99999
+		lowerIndex = start
+
+		for i in citiesIndex
+			if i !== start
+				curDistance = euclidean(cities[i], cities[start])
+
+				if curDistance < lowerDistance
+					lowerDistance = curDistance
+					lowerIndex = i
+				end
+			elseif i === start && size(citiesIndex, 1) === 1
+				lowerIndex = 1
+			end
+		end
+
+		filter!(e -> e != start, citiesIndex)
+
+		citiesCircuit[start][lowerIndex] = 1
+		start = lowerIndex
+	end	
+	println(citiesCircuit)
+
+	for i in 1:N
+		for j in 1:N
+			set_start_value(x[(i * N) + j - N], citiesCircuit[i][j])
+		end
+	end
+	
+	println("optimizing...")
 	results = optimize!(salesman)
 
-	#Getting values of x[i,j] to show a solved graph
+	# Getting values of x[i,j] to show a solved graph
 	edgeOrigin = [Vector{Float64}(undef, 2) for _ in 1:N]
 	edgeDestiny = [Vector{Float64}(undef, 2) for _ in 1:N]
 	j = 1
 	k = 1
-	for i in 1:(N*N)
+	for i in 1:(N * N)
 		if j != k && getvalue(x[i]) > 0.99
 			edgeOrigin[j] = cities[j]
 			edgeDestiny[j] = cities[k]
@@ -141,11 +188,12 @@ function main()
 
 		plot(edgesX, edgesY, color = "blue")
 	end
-    xlabel("X")
-    ylabel("Y")
-    title("Travelling salesman")
-    grid("on")
-    show()
+
+	xlabel("X")
+	ylabel("Y")
+	title("Travelling salesman")
+	grid("on")
+	show()
 
 end
 
